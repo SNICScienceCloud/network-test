@@ -14,26 +14,30 @@ variable node_count {
   description = "Number of nodes to deploy"
 }
 
+variable command {
+  description = "Command to run on the nodes"
+}
+
 resource "openstack_compute_keypair_v2" "keypair" {
   name       = "${var.cluster_prefix}-keypair"
   public_key = "${file(var.ssh_key_pub)}"
 }
 
 module "secgroup" {
-  source              = "mcapuccini/rke/openstack/modules/secgroup"
+  source              = "mcapuccini/rke/openstack//modules/secgroup"
   name_prefix         = "${var.cluster_prefix}"
   allowed_ingress_tcp = [22]
 }
 
 module "network" {
-  source              = "mcapuccini/rke/openstack/modules/network"
+  source              = "mcapuccini/rke/openstack//modules/network"
   name_prefix         = "${var.cluster_prefix}"
   external_network_id = "af006ff3-d68a-4722-a056-0f631c5a0039"
 }
 
 resource "openstack_compute_instance_v2" "instance" {
   count       = "${var.node_count}"
-  name        = "${var.name_prefix}-${format("%03d", count.index)}"
+  name        = "${var.cluster_prefix}-${format("%03d", count.index)}"
   image_name  = "Ubuntu 16.04 LTS (Xenial Xerus) - latest"
   flavor_name = "ssc.xlarge"
   key_pair    = "${openstack_compute_keypair_v2.keypair.name}"
@@ -73,7 +77,7 @@ resource null_resource "prepare_nodes" {
     }
 
     inline = [
-      "ping www.google.com"
+      "${var.command}"
     ]
 
     timeouts {
