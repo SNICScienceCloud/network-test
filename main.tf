@@ -64,7 +64,7 @@ resource null_resource "prepare_nodes" {
   count = "${var.node_count}"
 
   triggers {
-    instance_id = "${element(openstack_compute_instance_v2.instance.*.id, count.index)}"
+    instance_id = "${element(openstack_compute_instance_v2.instance.*.id, count.index)}-${timestamp()}"
   }
 
   provisioner "remote-exec" {
@@ -79,9 +79,5 @@ resource null_resource "prepare_nodes" {
     inline = [
       "${var.command}"
     ]
-
-    timeouts {
-      create = "8640h" # ~ one year :)
-    }
   }
 }
